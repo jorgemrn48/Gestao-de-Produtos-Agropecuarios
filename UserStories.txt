@@ -1,0 +1,38 @@
+User Story 1: Gerenciar catálogo de produtos agropecuários
+Descrição: eu, como administrador, gostaria de cadastrar e editar produtos e suas categorias (sementes, defensivos, ferramentas) para estruturar as opções do sistema;
+Prioridade: Alta;
+Estimativa: 3 SP;
+Critérios de Aceitação: 
+1. O sistema deve armazenar nome, categoria e unidade de medida (Kg, L, Saca) do produto;
+2. Não devem ser permitidos cadastros de produtos duplicados com a mesma nomenclatura;
+3. Cada produto precisa obrigatoriamente estar vinculado a uma categoria previamente cadastrada.
+
+
+User Story 2: Registrar entrada de lotes de estoque
+Descrição: eu, como operador de estoque, gostaria de registrar a chegada de novas mercadorias para atualizar o saldo disponível e rastrear os custos;
+Prioridade: Alta;
+Estimativa: 3 SP;
+Critérios de Aceitação:
+1. O registro deve conter o produto vinculado, data de recebimento e validade, quantidade e preço da nota;
+2. O saldo atual do lote deve ser disponibilizado para consulta em tempo real;
+3. Não deve ser possível cadastrar lote com quantidade inicial nula ou negativa.
+
+
+User Story 3: Registrar retirada ou movimentação de mercadorias
+Descrição: eu, como vendedor, gostaria de registrar a saída de produtos do estoque para contabilizar vendas ou descartes;
+Prioridade: Alta;
+Estimativa: 3 SP;
+Critérios de Aceitação:
+1. A quantidade retirada não pode ser superior ao saldo disponível no lote selecionado;
+2. Toda movimentação deve ficar obrigatoriamente atrelada ao usuário responsável que realizou a operação;
+3. A operação de saída deve descontar automaticamente a quantidade no saldo total do lote no banco de dados.
+
+
+User Story 4: Autenticação e controle de acesso
+Descrição: eu, como usuário, gostaria de acessar a aplicação de forma segura, garantindo que as ações permitidas correspondam estritamente ao meu nível de acesso (cargo);
+Prioridade: Alta;
+Estimativa: 3 SP;
+Critérios de Aceitação:
+1. Cada usuário deve possuir um login único e senha protegida;
+2. Apenas usuários autenticados com sessão válida podem interagir com dados do estoque;
+3. Cada usuário com perfil de "vendedor" não deve acessar ou modificar rotas de cadastro de categorias e produtos.
