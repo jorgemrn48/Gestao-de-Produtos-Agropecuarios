@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_estoque
+    restart: always
+    environment:
+      MYSQL_DATABASE: estoque_agro
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: senha123
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
