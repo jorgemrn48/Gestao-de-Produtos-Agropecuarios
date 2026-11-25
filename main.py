@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 import bcrypt
 import models, schemas
@@ -7,6 +8,8 @@ from database import engine, get_db
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API de Gestão (Custeio, Classificação e Financeiro)", version="4.0")
+
+UNIDADES_INTEIRAS = {"un", "und", "unidade", "unidades", "bandeja", "bandejas", "caixa", "caixas", "duzia", "dúzia"}
 
 
 def gerar_hash_senha(senha: str) -> str:
@@ -22,11 +25,29 @@ def verificar_senha(senha: str, senha_hash: str) -> bool:
         return False
 
 
+def validar_quantidade_retirada(quantidade: float, unidade_medida: str | None) -> None:
+    if quantidade <= 0:
+        raise HTTPException(status_code=400, detail="A quantidade da retirada deve ser maior que zero.")
+
+    unidade_normalizada = (unidade_medida or "").strip().lower()
+    if unidade_normalizada in UNIDADES_INTEIRAS and not float(quantidade).is_integer():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Quantidade inválida para unidade '{unidade_medida}': informe um valor inteiro."
+        )
+
+
 @app.post("/usuarios/", response_model=schemas.UsuarioResponse)
 def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
+    nome_limpo = usuario.nome.strip()
+    login_limpo = usuario.login.strip()
+
+    if not nome_limpo or not login_limpo or not usuario.senha or not usuario.senha.strip():
+        raise HTTPException(status_code=400, detail="Nome, login e senha são obrigatórios.")
+
     db_usuario = models.Usuario(
-        nome=usuario.nome,
-        login=usuario.login,
+        nome=nome_limpo,
+        login=login_limpo,
         senha_hash=gerar_hash_senha(usuario.senha),
         role=usuario.role,
     )
@@ -35,9 +56,12 @@ def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db))
         db.commit()
         db.refresh(db_usuario)
         return db_usuario
-    except Exception:
+    except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="O Login já existe.")
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Erro ao criar usuário.")
 
 
 @app.get("/usuarios/", response_model=list[schemas.UsuarioResponse])
@@ -47,7 +71,7 @@ def listar_usuarios(db: Session = Depends(get_db)):
 
 @app.post("/login/")
 def login(req: schemas.LoginData, db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.login == req.login).first()
+    usuario = db.query(models.Usuario).filter(models.Usuario.login == req.login.strip()).first()
 
     if not usuario or not verificar_senha(req.senha, usuario.senha_hash):
         raise HTTPException(status_code=401, detail="Credenciais incorretas")
@@ -124,7 +148,13 @@ def listar_estoque(db: Session = Depends(get_db)):
 @app.post("/retiradas/", response_model=schemas.RetiradaResponse)
 def registrar_retirada(retirada: schemas.RetiradaCreate, db: Session = Depends(get_db)):
     estoque = db.query(models.EstoqueClassificado).filter(models.EstoqueClassificado.id == retirada.estoque_id).first()
-    if not estoque or estoque.quantidade_disponivel < retirada.quantidade:
+    if not estoque:
+        raise HTTPException(status_code=404, detail="Lote de estoque não encontrado.")
+
+    unidade = estoque.produto.unidade_medida if estoque.produto else None
+    validar_quantidade_retirada(retirada.quantidade, unidade)
+
+    if estoque.quantidade_disponivel < retirada.quantidade:
         raise HTTPException(status_code=400, detail="Saldo insuficiente.")
 
     nova_retirada = models.Retirada(**retirada.model_dump())
