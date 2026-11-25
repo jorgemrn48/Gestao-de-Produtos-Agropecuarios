@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -5,7 +6,8 @@ import bcrypt
 import models, schemas
 from database import engine, get_db
 
-models.Base.metadata.create_all(bind=engine)
+if os.getenv("SKIP_DB_INIT") != "1":
+    models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API de Gestão (Custeio, Classificação e Financeiro)", version="4.0")
 
