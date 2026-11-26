@@ -1,5 +1,5 @@
 User Story 1: Gerenciar catálogo de produtos agropecuários
-Descrição: eu, como administrador, gostaria de cadastrar e editar produtos e suas categorias (sementes, defensivos, ferramentas) para estruturar as opções do sistema;
+Descrição: eu, como administrador, gostaria de cadastrar e editar produtos e suas categorias (ovos, lacticínios, outros produtos) para estruturar as opções do sistema;
 Prioridade: Alta;
 Estimativa: 3 SP;
 Critérios de Aceitação: 
